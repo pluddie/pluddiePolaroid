@@ -85,7 +85,7 @@ html, body {
 .top-art-img { width: 80px; height: 80px; object-fit: contain; }
 
 /* ── S2: Frame grid ── */
-#s2 { justify-content: flex-start; padding-top: 0; }
+#s2 { justify-content: flex-start; padding-top: 0; align-items: center; }
 .frame-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 30px 20px; width: 100%; max-width: 440px;
@@ -100,7 +100,7 @@ html, body {
 .frame-name { font-size: .72rem; font-weight: 700; color: var(--light); text-align: center; }
 
 /* ── S3: Filter swatches ── */
-#s3 { justify-content: flex-start; }
+#s3 { justify-content: flex-start; align-items: center; }
 .swatch-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 18px; width: 100%; max-width: 260px;
@@ -117,14 +117,16 @@ html, body {
   position: absolute; inset: 0;
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 12 9 17 20 7'/%3E%3C/svg%3E") center/55% no-repeat;
 }
+.s3-body { display: flex; flex-direction: column; align-items: center; }
+.s3-confirm-slot { height: 40px; display: flex; align-items: center; justify-content: center; margin-top: 16px; }
 .filter-confirm {
-  margin-top: 20px; padding: 0; min-width: unset; flex: unset;
+  padding: 0; min-width: unset; flex: unset;
   font-size: .9rem; background: none; border: none;
-  color: var(--cream); opacity: .8; text-decoration: none;
+  color: var(--cream); opacity: .8;
   cursor: pointer; font-family: var(--font); font-weight: 700;
   transition: opacity .15s;
 }
-.filter-confirm:hover { opacity: 1; transform: none; }
+.filter-confirm:hover { opacity: 1; }
 
 /* ── S4: Loading ── */
 #s4 { justify-content: center; gap: 20px; }
@@ -261,6 +263,51 @@ img#preview-img  { width:100%; height:100%; object-fit:cover; }
 .btn.outline { background: transparent; color: var(--cream); }
 .btn.outline:hover { background: rgba(253,244,231,.1); }
 
+/* ── Sketchy hand-drawn border effect ── */
+.sketchy {
+  position: relative;
+}
+.sketchy::before {
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: inherit;
+  border: 2.5px solid var(--bg);
+  filter: url(#sketchy-filter);
+  pointer-events: none; z-index: 1;
+}
+
+/* Apply hand-drawn look to film SVG strokes */
+.film-svg-wrap svg path,
+.film-svg-wrap svg polygon {
+  paint-order: stroke fill;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Swatch rough border */
+.swatch {
+  border-color: transparent;
+  box-shadow: 0 0 0 2.5px transparent;
+}
+.swatch.sel {
+  border: none;
+  outline: 2.5px solid var(--cream);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+
+/* Viewfinder rough border */
+.viewfinder {
+  outline: 2px solid var(--mid);
+  outline-offset: -1px;
+}
+
+/* Camera shell rough border */
+.camera-shell {
+  border-width: 2.5px;
+}
+
 /* ── Flash ── */
 .flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:9999; transition:opacity .05s; }
 .flash.on { opacity:1; }
@@ -283,15 +330,17 @@ img#preview-img  { width:100%; height:100%; object-fit:cover; }
     overflow: hidden;
   }
   .left-inner {
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px; width: 100%; max-width: 100%;
+    gap: 2px; width: 100%; max-width: 100%;
   }
   .left-emoji { display: none; }
   .left-links { display: none; }
-  .left-subtitle { font-size: .7rem; }
-  .left-title { font-size: 1.3rem; }
+  .left-subtitle { font-size: .7rem; text-align: center; }
+  .left-title { font-size: 1.1rem; text-align: center; }
+  /* keep subtitle and title stacked but compact */
+  .left-inner > div { display: flex; flex-direction: row; align-items: baseline; gap: 8px; }
 
   /* ── Mobile right panel: fills remaining space ── */
   .right-panel {
@@ -337,6 +386,14 @@ input[type=file] { display:none; }
 
 </head>
 <body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <filter id="sketchy-filter" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04 0.06" numOctaves="2" seed="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 <div class="flash" id="flash"></div>
 <div class="layout">
 
@@ -381,8 +438,12 @@ input[type=file] { display:none; }
     <!-- S3 -->
     <div class="screen" id="s3">
       <div class="section-header">選擇底片濾鏡</div>
-      <div class="swatch-grid" id="swatch-grid"></div>
-      <button class="filter-confirm hidden" id="filter-confirm">確認 →</button>
+      <div class="s3-body">
+        <div class="swatch-grid" id="swatch-grid"></div>
+        <div class="s3-confirm-slot">
+          <button class="filter-confirm hidden" id="filter-confirm">確認 →</button>
+        </div>
+      </div>
     </div>
 
     <!-- S4 -->
@@ -423,6 +484,7 @@ input[type=file] { display:none; }
           <button class="cam-btn"      id="btn-upload">上傳照片</button>
         </div>
         <div class="cam-actions hidden" id="act-snap">
+          <button class="cam-btn" id="btn-flip">⟳ 翻轉</button>
           <button class="cam-btn fill" id="btn-snap">拍照</button>
         </div>
         <div class="cam-actions hidden" id="act-preview">
@@ -457,16 +519,16 @@ input[type=file] { display:none; }
 
 <script>
 /* ── State ── */
-let step = 1, selFrame = null, selFilter = 'none', capturedUrl = null, stream = null;
+let step = 1, selFrame = null, selFilter = 'none', capturedUrl = null, stream = null, facingMode = 'user';
 
 /* ── Frames (SVG film-box, same design as uploaded) ── */
 const FRAMES = [
   { id:'f1', name:'Classic',  body:'#FFFFFF', head:'#1FA74D', stroke:'#231F20' },
-  { id:'f2', name:'Noir',     body:'#F0EBE3', head:'#2C2C2C', stroke:'#111111' },
-  { id:'f3', name:'Rose',     body:'#FFF0F3', head:'#D9607A', stroke:'#8B2035' },
-  { id:'f4', name:'Sky',      body:'#EEF6FF', head:'#3A86C8', stroke:'#1A4A7A' },
-  { id:'f5', name:'Sunny',    body:'#FFFBEA', head:'#E8B800', stroke:'#7A5C00' },
-  { id:'f6', name:'Lavender', body:'#F5F0FF', head:'#8B5CF6', stroke:'#4C1D95' },
+  { id:'f2', name:'Noir',     body:'#2C2C2C', head:'#111111', stroke:'#000000' },
+  { id:'f3', name:'Rose',     body:'#F4A0B4', head:'#D9607A', stroke:'#8B2035' },
+  { id:'f4', name:'Sky',      body:'#7BBDE8', head:'#3A86C8', stroke:'#1A4A7A' },
+  { id:'f5', name:'Sunny',    body:'#F5D060', head:'#E8B800', stroke:'#7A5C00' },
+  { id:'f6', name:'Lavender', body:'#C4A8F8', head:'#8B5CF6', stroke:'#4C1D95' },
 ];
 const TILTS = [-6, 3, -3, 7, -5, 2];
 
@@ -574,11 +636,20 @@ function showPreview(src) {
   const p = id('preview-img'); p.src = src; p.classList.remove('hidden');
 }
 
-id('btn-cam').onclick = async () => {
+async function startCam() {
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-    id('cam-video').srcObject = stream; showLive();
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
+    const vid = id('cam-video');
+    vid.srcObject = stream;
+    vid.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+    showLive();
   } catch { alert('無法存取相機，請確認權限。'); }
+}
+id('btn-cam').onclick = () => startCam();
+id('btn-flip').onclick = () => {
+  facingMode = facingMode === 'user' ? 'environment' : 'user';
+  startCam();
 };
 
 id('btn-upload').onclick = () => id('file-input').click();
@@ -617,8 +688,8 @@ id('btn-use').onclick = () => {
 function showResult(url) {
   const f = selFrame || FRAMES[0];
   const card = id('polaroid-card');
-  card.style.backgroundColor = f.body;
-  card.style.borderColor = f.stroke;
+  card.style.background = f.body;
+  card.style.border = 'none';
   id('result-img').src = url;
   id('caption').value = '';
   goTo(6);
