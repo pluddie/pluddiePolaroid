@@ -70,6 +70,7 @@
   /* ── 共用頂部導覽列 ── */
   .nav-bar{
     flex-shrink:0;
+    align-self:stretch;
     position:relative;
     display:flex; align-items:center; justify-content:center;
     height:64px;
@@ -369,7 +370,7 @@
     border:2px solid var(--line);
     display:none;
   }
-  .qr-wrap canvas{ display:block; width:180px !important; height:180px !important; }
+  .qr-wrap img{ display:block; width:180px !important; height:180px !important; border-radius:8px; }
   .qr-label{
     font-family:var(--font);
     font-weight:700;
@@ -465,7 +466,7 @@
 
         <div id="doneStage">
           <div class="done-title">照片已準備好～<br>掃描儲存照片！</div>
-          <div class="qr-wrap" id="qrWrap"><canvas id="qrCanvas"></canvas></div>
+          <div class="qr-wrap" id="qrWrap"><img id="qrCanvas" style="width:180px;height:180px;display:block;border-radius:8px;" alt="QR Code"></div>
           <div class="qr-label" id="qrLabel"></div>
           <button class="btn btn-fill" id="btnNextShot">拍下一張</button>
         </div>
@@ -798,44 +799,60 @@ async function uploadToImgbb(dataUrl){
 async function showDownloadStage(finalDataUrl){
   document.getElementById('printingStage').style.display = 'none';
   document.getElementById('doneStage').style.display = 'flex';
-  // 更新頂部標題
   const navTitle = document.querySelector('#screen-printing .nav-title');
   if(navTitle) navTitle.textContent = '照片完成！';
 
   const qrWrap = document.getElementById('qrWrap');
   const qrLabel = document.getElementById('qrLabel');
-  const qrCanvas = document.getElementById('qrCanvas');
+  const qrImg = document.getElementById('qrCanvas');
 
-  // 等待 QRCode 函式庫載入（最多 5 秒）
-  let waited = 0;
-  while(!window.QRCode && waited < 5000){
-    await new Promise(r=>setTimeout(r, 200)); waited += 200;
+  // 等待 QRCode 函式庫（最多 8 秒）
+  for(let i = 0; i < 40; i++){
+    if(window.QRCode) break;
+    await new Promise(r => setTimeout(r, 200));
   }
 
-  if(IMGBB_CONFIG.enabled && window.QRCode){
+  async function renderQR(url){
+    return new Promise((resolve, reject)=>{
+      try{
+        QRCode.toDataURL(url, {
+          width: 180, margin: 1,
+          color: { dark: '#3E2A1A', light: '#FFFFFF' }
+        }, (err, dataUrl)=>{
+          if(err) reject(err);
+          else { qrImg.src = dataUrl; resolve(); }
+        });
+      } catch(e){ reject(e); }
+    });
+  }
+
+  if(!window.QRCode){
+    qrWrap.style.display = 'none';
+    qrLabel.textContent = '無法載入 QR Code，請確認網路連線';
+    return;
+  }
+
+  if(IMGBB_CONFIG.enabled){
     qrLabel.textContent = '正在產生下載連結…';
     qrWrap.style.display = '';
     try{
       const url = await uploadToImgbb(finalDataUrl);
-      qrCanvas.width = qrCanvas.height = 0;
-      QRCode.toCanvas(qrCanvas, url, { width:180, margin:1, color:{ dark:'#3E2A1A', light:'#FFFFFF' } });
-      qrWrap.style.display = '';
+      await renderQR(url);
       qrLabel.textContent = '用手機掃描下載你的照片';
     }catch(err){
       console.error('上傳失敗', err);
       qrWrap.style.display = 'none';
       qrLabel.textContent = '無法產生 QR Code，請改用 Email 接收';
     }
-  } else if(window.QRCode){
+  } else {
     try{
-      qrCanvas.width = qrCanvas.height = 0;
-      QRCode.toCanvas(qrCanvas, 'https://pluddie.studio', { width:180, margin:1, color:{ dark:'#3E2A1A', light:'#FFFFFF' } });
+      await renderQR('https://pluddie.studio');
       qrWrap.style.display = '';
       qrLabel.textContent = '設定 imgbb 後即可掃碼下載照片';
-    }catch(e){ qrWrap.style.display = 'none'; }
-  } else {
-    qrWrap.style.display = 'none';
-    qrLabel.textContent = '無法載入 QR Code 函式庫';
+    } catch(e){
+      qrWrap.style.display = 'none';
+      qrLabel.textContent = '無法產生 QR Code';
+    }
   }
 }
 
