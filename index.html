@@ -9,15 +9,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FDF3EB;
+    --bg:#FFF8EF;
     --surface:#FFFFFF;
-    --ink:#3E2A1A;
-    --muted:#B89880;
-    --pink:#E87830;
-    --pink-soft:#FDEADB;
-    --yellow:#C8691A;
-    --yellow-soft:#FEF0E3;
-    --line:#EDD9C8;
+    --ink:#4A3B33;
+    --muted:#C2B2A3;
+    --pink:#FF93AE;
+    --pink-soft:#FFE6ED;
+    --yellow:#FFCB57;
+    --yellow-soft:#FFF3D6;
+    --line:#F2E5D8;
 
     --font-zh:'Noto Sans TC', sans-serif;
     --font-en:'Fredoka', 'Noto Sans TC', sans-serif;
@@ -71,7 +71,7 @@
   .welcome-deco-top{ display:flex; gap:14px; }
   .welcome-deco-top svg{ width:30px; height:30px; }
 
-  .welcome-mid{ display:flex; flex-direction:column; align-items:center; gap:32px; }
+  .welcome-mid{ display:flex; flex-direction:column; align-items:center; gap:22px; }
   .mascot-emoji{
     font-size:88px;
     line-height:1;
@@ -83,32 +83,31 @@
   .brand-title{
     font-family:var(--font-zh);
     font-weight:900;
-    font-size:40px;
-    line-height:1.5;
+    font-size:30px;
+    line-height:1.35;
     color:var(--ink);
-    letter-spacing:.06em;
+    letter-spacing:.02em;
   }
   .brand-sub{
     font-family:var(--font-en);
     font-weight:600;
-    font-size:26px;
-    letter-spacing:.28em;
+    font-size:20px;
+    letter-spacing:.18em;
     color:var(--pink);
-    margin-top:14px;
+    margin-top:2px;
   }
 
   .press-start{
     font-family:var(--font-en);
     font-weight:600;
-    font-size:17px;
+    font-size:16px;
     letter-spacing:.22em;
-    color:var(--surface);
-    background:var(--pink);
-    border:2.5px solid var(--pink);
+    color:var(--ink);
+    background:var(--surface);
+    border:2.5px solid var(--ink);
     border-radius:50px;
-    padding:18px 40px;
+    padding:16px 34px;
     animation:pulseScale 1.8s ease-in-out infinite;
-    box-shadow:0 8px 24px -6px #E8783055;
   }
   @keyframes pulseScale{
     0%,100%{ transform:scale(1); }
@@ -117,27 +116,14 @@
 
   /* ===================== 2. 選擇相框 ===================== */
   #screen-frames{ padding:0; }
-  .frames-header{
-    flex-shrink:0;
-    padding:40px 26px 0;
-    text-align:center;
-    font-family:var(--font-zh);
-    font-weight:900;
-    font-size:20px;
-    color:var(--ink);
-    letter-spacing:.04em;
-    max-width:460px;
-    width:100%;
-    margin:0 auto;
-  }
   .frames-scroll{
     flex:1; overflow-y:auto;
     -webkit-overflow-scrolling:touch;
-    padding:20px 26px 24px;
+    padding:36px 26px 30px;
     display:grid;
     grid-template-columns:1fr 1fr;
-    column-gap:16px;
-    row-gap:20px;
+    column-gap:20px;
+    row-gap:26px;
     align-content:start;
     max-width:460px;
     margin:0 auto;
@@ -299,12 +285,11 @@
     font-weight:700;
     font-size:22px;
     color:var(--ink);
-    display:flex; flex-direction:column; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:2px;
   }
-  .printing-text-line1{ display:flex; align-items:center; }
   .dot-flicker span{
-    display:inline-block; width:8px; height:8px; border-radius:50%;
-    background:var(--pink); margin:0 4px;
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    background:var(--pink); margin-left:4px;
     animation:dotBlink 1.2s infinite;
   }
   .dot-flicker span:nth-child(2){ animation-delay:.2s; }
@@ -369,7 +354,6 @@
 
   <!-- ===================== 2. 選擇相框 ===================== -->
   <div class="screen" id="screen-frames">
-    <div class="frames-header">🖼️ 選擇你的相框</div>
     <div class="frames-scroll" id="framesScroll"></div>
     <div class="frames-footer">
       <button class="btn btn-outline" id="btnFrameBack">返回</button>
@@ -400,10 +384,7 @@
     </div>
 
     <div id="printingStage">
-      <div class="printing-text">
-        <div class="printing-text-line1">照片列印中　請稍候</div>
-        <span class="dot-flicker"><span></span><span></span><span></span></span>
-      </div>
+      <div class="printing-text">照片列印中　請稍候<span class="dot-flicker"><span></span><span></span><span></span></span></div>
       <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
     </div>
 
@@ -486,10 +467,6 @@ function goTo(name){
 
 /* ---------- 1. 歡迎頁 ---------- */
 screens.welcome.addEventListener('click', ()=>{
-  // 預先靜默請求鏡頭權限，避免進相機頁面時跳出提示打斷流程
-  navigator.mediaDevices.getUserMedia({ video:true, audio:false })
-    .then(s=>{ s.getTracks().forEach(t=>t.stop()); })
-    .catch(()=>{});
   renderFrameList();
   goTo('frames');
 });
@@ -735,7 +712,7 @@ async function composeAndPrint(){
     });
   }
 
-  await animateProgress(30000);
+  await animateProgress(1500);
 
   const finalDataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
@@ -805,7 +782,7 @@ async function showDownloadStage(finalDataUrl){
       const url = await uploadToImgbb(finalDataUrl);
       QRCode.toCanvas(document.getElementById('qrCanvas'), url, {
         width:150, margin:1,
-        color:{ dark:'#3E2A1A', light:'#FFFFFF' }
+        color:{ dark:'#4A3B33', light:'#FFFFFF' }
       });
       qrWrap.style.display = '';
       qrLabel.textContent = '掃描 QR Code　下載照片';
