@@ -6,21 +6,22 @@
 <title>小女孩和花花獅拍貼機</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<!-- Noto Sans TC (粗圓中文) + Nunito (粗圓英文) -->
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Noto+Sans+TC:wght@700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#FFF8EF;
+    --bg:#FDF3EB;
     --surface:#FFFFFF;
-    --ink:#4A3B33;
-    --muted:#C2B2A3;
-    --pink:#FF93AE;
-    --pink-soft:#FFE6ED;
-    --yellow:#FFCB57;
-    --yellow-soft:#FFF3D6;
-    --line:#F2E5D8;
+    --ink:#3E2A1A;
+    --muted:#B89880;
+    --accent:#E87830;
+    --accent-soft:#FDEADB;
+    --accent2:#C8691A;
+    --accent2-soft:#FEF0E3;
+    --line:#EDD9C8;
 
-    --font-zh:'Noto Sans TC', sans-serif;
-    --font-en:'Fredoka', 'Noto Sans TC', sans-serif;
+    /* 全站統一粗圓字體：中文用 Noto Sans TC，英文/數字用 Nunito */
+    --font:'Nunito','Noto Sans TC',sans-serif;
   }
 
   *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
@@ -28,7 +29,7 @@
     width:100%; height:100%;
     background:var(--bg);
     overflow:hidden;
-    font-family:var(--font-zh);
+    font-family:var(--font);
     color:var(--ink);
     -webkit-user-select:none; user-select:none;
   }
@@ -36,19 +37,60 @@
   #app{
     position:fixed; inset:0;
     height:100vh; height:100dvh;
+    display:flex; flex-direction:column;
   }
+
+  /* ── Copyright footer ── */
+  #copyright-footer{
+    flex-shrink:0;
+    text-align:center;
+    padding:6px 0 max(8px, env(safe-area-inset-bottom));
+    font-family:var(--font);
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.14em;
+    color:var(--muted);
+    background:var(--bg);
+    border-top:1px solid var(--line);
+    z-index:100;
+  }
+
+  #screens{ flex:1; position:relative; overflow:hidden; }
 
   .screen{
     position:absolute; inset:0;
     display:flex; flex-direction:column;
     opacity:0; visibility:hidden;
-    transition:opacity .45s ease;
+    transition:opacity .4s ease;
     pointer-events:none;
     background:var(--bg);
   }
   .screen.active{ opacity:1; visibility:visible; pointer-events:auto; }
 
-  /* ===================== 共用：54x85 比例框 ===================== */
+  /* ── 共用頂部導覽列（含返回） ── */
+  .nav-bar{
+    flex-shrink:0;
+    display:flex; align-items:center;
+    padding:16px 20px 0;
+    min-height:56px;
+  }
+  .btn-back{
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--font);
+    font-weight:800;
+    font-size:17px;
+    color:var(--ink);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:8px 12px 8px 6px;
+    border-radius:50px;
+    transition:background .15s;
+  }
+  .btn-back:active{ background:var(--line); }
+  .btn-back svg{ width:22px; height:22px; flex-shrink:0; }
+
+  /* ── 共用：54×85 比例框 ── */
   .ratio-box{
     aspect-ratio:54/85;
     border-radius:20px;
@@ -57,135 +99,17 @@
     background:var(--surface);
   }
 
-  /* ===================== 1. 歡迎頁 ===================== */
-  #screen-welcome{
-    align-items:center; justify-content:space-between;
-    text-align:center;
-    padding:60px 28px 50px;
-    background:
-      radial-gradient(circle at 18% 12%, var(--pink-soft) 0%, transparent 45%),
-      radial-gradient(circle at 85% 78%, var(--yellow-soft) 0%, transparent 45%),
-      var(--bg);
-    cursor:pointer;
-  }
-  .welcome-deco-top{ display:flex; gap:14px; }
-  .welcome-deco-top svg{ width:30px; height:30px; }
-
-  .welcome-mid{ display:flex; flex-direction:column; align-items:center; gap:22px; }
-  .mascot-emoji{
-    font-size:88px;
-    line-height:1;
-    display:flex; align-items:center;
-    filter:drop-shadow(0 8px 16px #00000014);
-  }
-  .mascot-emoji .emoji-gap{ margin-left:6px; }
-
-  .brand-title{
-    font-family:var(--font-zh);
-    font-weight:900;
-    font-size:30px;
-    line-height:1.35;
-    color:var(--ink);
-    letter-spacing:.02em;
-  }
-  .brand-sub{
-    font-family:var(--font-en);
-    font-weight:600;
-    font-size:20px;
-    letter-spacing:.18em;
-    color:var(--pink);
-    margin-top:2px;
-  }
-
-  .press-start{
-    font-family:var(--font-en);
-    font-weight:600;
-    font-size:16px;
-    letter-spacing:.22em;
-    color:var(--ink);
-    background:var(--surface);
-    border:2.5px solid var(--ink);
-    border-radius:50px;
-    padding:16px 34px;
-    animation:pulseScale 1.8s ease-in-out infinite;
-  }
-  @keyframes pulseScale{
-    0%,100%{ transform:scale(1); }
-    50%{ transform:scale(1.045); }
-  }
-
-  /* ===================== 2. 選擇相框 ===================== */
-  #screen-frames{ padding:0; }
-  .frames-scroll{
-    flex:1; overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    padding:36px 26px 30px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    column-gap:20px;
-    row-gap:26px;
-    align-content:start;
-    max-width:460px;
-    margin:0 auto;
-    width:100%;
-  }
-  .frame-slot{
-    border:2px dashed var(--line);
-    background:var(--surface);
-    box-shadow:0 4px 14px -6px #00000014;
-    transition:border-color .25s, background .25s, transform .15s;
-    display:flex; align-items:center; justify-content:center;
-    position:relative;
-  }
-  .frame-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .frame-slot:active{ transform:scale(.97); }
-  .frame-slot.selected{
-    border:2.5px solid var(--pink);
-    background:var(--pink-soft);
-  }
-  .frame-slot.has-image{ border-style:solid; border-color:var(--line); }
-  .frame-slot.has-image.selected{ border-color:var(--pink); }
-  .frame-slot .plus-icon{
-    width:26px; height:26px; color:var(--muted);
-  }
-  .frame-slot .sel-badge{
-    position:absolute; top:8px; right:8px;
-    width:26px; height:26px; border-radius:50%;
-    background:var(--pink);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; transform:scale(.6);
-    transition:opacity .2s, transform .2s;
-    z-index:2;
-  }
-  .frame-slot.selected .sel-badge{ opacity:1; transform:scale(1); }
-  .frame-slot .sel-badge svg{ width:13px; height:13px; }
-
-  .replace-btn{
-    position:absolute; top:8px; left:8px;
-    width:26px; height:26px; border-radius:50%;
-    background:#ffffffcc; backdrop-filter:blur(2px);
-    border:1px solid var(--line);
-    display:flex; align-items:center; justify-content:center;
-    z-index:2;
-  }
-  .replace-btn svg{ width:13px; height:13px; color:var(--ink); }
-
-  .frames-footer{
-    flex-shrink:0;
-    display:flex; gap:14px;
-    padding:16px 24px 34px;
-    background:var(--bg);
-    border-top:1px solid var(--line);
-  }
+  /* ── 共用按鈕 ── */
   .btn{
-    font-family:var(--font-zh);
-    font-weight:700;
-    font-size:17px;
+    font-family:var(--font);
+    font-weight:800;
+    font-size:18px;
     border-radius:50px;
     padding:17px 0;
     flex:1;
     border:none;
     transition:transform .15s, opacity .2s;
+    cursor:pointer;
   }
   .btn:active{ transform:scale(.97); }
   .btn-outline{
@@ -194,18 +118,155 @@
     border:2.5px solid var(--ink);
   }
   .btn-fill{
-    background:var(--pink);
+    background:var(--accent);
     color:#fff;
   }
   .btn-fill:disabled{ opacity:.35; }
 
+  /* ===================== 1. 歡迎頁 ===================== */
+  #screen-welcome{
+    align-items:center; justify-content:space-between;
+    text-align:center;
+    padding:52px 28px 44px;
+    background:
+      radial-gradient(circle at 18% 12%, var(--accent-soft) 0%, transparent 45%),
+      radial-gradient(circle at 85% 78%, var(--accent2-soft) 0%, transparent 45%),
+      var(--bg);
+    cursor:pointer;
+  }
+  .welcome-deco-top{ display:flex; gap:14px; }
+  .welcome-deco-top svg{ width:30px; height:30px; }
+  .welcome-mid{ display:flex; flex-direction:column; align-items:center; gap:28px; }
+  .mascot-emoji{
+    font-size:88px; line-height:1;
+    display:flex; align-items:center;
+    filter:drop-shadow(0 8px 16px #00000014);
+  }
+  .mascot-emoji .emoji-gap{ margin-left:6px; }
+  .brand-title{
+    font-family:var(--font);
+    font-weight:900;
+    font-size:40px;
+    line-height:1.45;
+    color:var(--ink);
+    letter-spacing:.04em;
+  }
+  .brand-sub{
+    font-family:var(--font);
+    font-weight:800;
+    font-size:26px;
+    letter-spacing:.24em;
+    color:var(--accent);
+    margin-top:12px;
+  }
+  .press-start{
+    font-family:var(--font);
+    font-weight:900;
+    font-size:18px;
+    letter-spacing:.2em;
+    color:#fff;
+    background:var(--accent);
+    border:none;
+    border-radius:50px;
+    padding:18px 44px;
+    animation:pulseScale 1.8s ease-in-out infinite;
+    box-shadow:0 8px 24px -6px #E8783055;
+    cursor:pointer;
+  }
+  @keyframes pulseScale{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.045); }
+  }
+
+  /* ===================== 2. 選擇相框 ===================== */
+  #screen-frames{ padding:0; }
+
+  .frames-header{
+    flex-shrink:0;
+    padding:4px 24px 14px;
+    text-align:center;
+    font-family:var(--font);
+    font-weight:900;
+    font-size:24px;
+    color:var(--ink);
+    letter-spacing:.04em;
+  }
+
+  .frames-scroll{
+    flex:1;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding:0 16px 16px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    align-content:start;
+  }
+
+  /* padding-bottom trick → preserves 54:85 ratio while filling column width */
+  .frame-slot{
+    width:100%;
+    padding-bottom:calc(100% * 85 / 54);
+    position:relative;
+    border-radius:16px;
+    border:2px dashed var(--line);
+    background:var(--surface);
+    box-shadow:0 4px 14px -6px #00000014;
+    transition:border-color .25s, background .25s, transform .15s;
+    overflow:hidden;
+  }
+  .frame-slot:active{ transform:scale(.97); }
+  .frame-slot.selected{ border:2.5px solid var(--accent); background:var(--accent-soft); }
+  .frame-slot.has-image{ border-style:solid; border-color:var(--line); }
+  .frame-slot.has-image.selected{ border-color:var(--accent); }
+  .frame-slot > *:not(input){ position:absolute; inset:0; }
+  .frame-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .slot-inner{ display:flex; align-items:center; justify-content:center; }
+  .plus-icon{ width:30px; height:30px; color:var(--muted); }
+  .sel-badge{
+    position:absolute; bottom:8px; right:8px; top:auto; left:auto;
+    width:28px; height:28px; border-radius:50%;
+    background:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transform:scale(.6);
+    transition:opacity .2s, transform .2s;
+    z-index:2;
+  }
+  .frame-slot.selected .sel-badge{ opacity:1; transform:scale(1); }
+  .sel-badge svg{ width:14px; height:14px; }
+  .replace-btn{
+    position:absolute; top:8px; left:8px;
+    width:28px; height:28px; border-radius:50%;
+    background:#ffffffcc; backdrop-filter:blur(2px);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    z-index:2;
+  }
+  .replace-btn svg{ width:14px; height:14px; color:var(--ink); }
+  .frames-footer{
+    flex-shrink:0;
+    display:flex; gap:14px;
+    padding:12px 20px 20px;
+    background:var(--bg);
+    border-top:1px solid var(--line);
+  }
+
   /* ===================== 3. 拍照畫面 ===================== */
   #screen-camera{
     align-items:center; justify-content:space-between;
-    padding:50px 24px 34px;
+    padding:0 24px 28px;
+  }
+  .cam-title{
+    font-family:var(--font);
+    font-weight:900;
+    font-size:26px;
+    color:var(--ink);
+    text-align:center;
+    letter-spacing:.03em;
+    padding:8px 0 6px;
   }
   .cam-box{
-    width:min(72vw, 340px);
+    width:min(68vw, 300px);
     box-shadow:0 18px 40px -10px #00000022;
     border:3px solid var(--surface);
     outline:1px solid var(--line);
@@ -223,107 +284,106 @@
   #capturedCanvas{ display:none; }
   #capturedCanvas.show{ display:block; }
   #video.hide{ display:none; }
-
   .flash-overlay{
     position:absolute; inset:0; background:#fff;
-    opacity:0; pointer-events:none; border-radius:18px;
-    z-index:3;
+    opacity:0; pointer-events:none; border-radius:18px; z-index:3;
   }
   .flash-overlay.fire{ animation:flashFire .3s ease-out; }
   @keyframes flashFire{ 0%{opacity:1} 100%{opacity:0} }
-
   .countdown-num{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-en);
-    font-weight:700;
-    font-size:120px;
+    font-family:var(--font);
+    font-weight:900; font-size:120px;
     color:#fff;
     text-shadow:0 4px 20px #00000055;
     background:#00000022;
-    z-index:4;
-    opacity:0; pointer-events:none;
+    z-index:4; opacity:0; pointer-events:none;
   }
-  .countdown-num.show{
-    animation:countPulse .9s ease-out;
-  }
+  .countdown-num.show{ animation:countPulse .9s ease-out; }
   @keyframes countPulse{
     0%{ opacity:0; transform:scale(1.5); }
     20%{ opacity:1; transform:scale(1); }
     85%{ opacity:1; transform:scale(1); }
     100%{ opacity:0; transform:scale(.92); }
   }
+  .cam-buttons{ display:flex; gap:14px; width:100%; max-width:380px; }
 
-  .cam-buttons{
-    display:flex; gap:14px;
-    width:100%;
-    max-width:380px;
+  /* ===================== 4. 列印中 / 完成 ===================== */
+  #screen-printing{ align-items:center; justify-content:flex-start; padding:0; }
+
+  .printing-inner{
+    flex:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:0 28px 20px;
+    gap:0;
   }
 
-  /* ===================== 4. 列印中 ===================== */
-  #screen-printing{
-    align-items:center; justify-content:center;
-    padding:0 28px;
-  }
   .print-box{
-    width:min(62vw, 300px);
+    width:min(50vw, 240px);
     box-shadow:0 24px 50px -12px #00000026;
-    margin-bottom:42px;
+    margin-bottom:28px;
     animation:printPop .6s ease-out;
   }
   @keyframes printPop{
     0%{ opacity:0; transform:translateY(18px) scale(.96); }
     100%{ opacity:1; transform:translateY(0) scale(1); }
   }
-  .print-box img, .print-box canvas{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover;
-  }
+  .print-box canvas{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
   .printing-text{
-    font-family:var(--font-zh);
-    font-weight:700;
+    font-family:var(--font);
+    font-weight:800;
     font-size:22px;
     color:var(--ink);
-    display:flex; align-items:center; gap:2px;
+    display:flex; flex-direction:column; align-items:center; gap:12px;
   }
+  .dot-flicker{ display:flex; gap:7px; }
   .dot-flicker span{
-    display:inline-block; width:6px; height:6px; border-radius:50%;
-    background:var(--pink); margin-left:4px;
+    display:inline-block; width:10px; height:10px; border-radius:50%;
+    background:var(--accent);
     animation:dotBlink 1.2s infinite;
   }
   .dot-flicker span:nth-child(2){ animation-delay:.2s; }
   .dot-flicker span:nth-child(3){ animation-delay:.4s; }
   @keyframes dotBlink{ 0%,80%,100%{opacity:.15} 40%{opacity:1} }
-
   .progress-track{
-    width:160px; height:6px; background:var(--line);
-    margin-top:26px; border-radius:6px; overflow:hidden;
+    width:200px; height:7px; background:var(--line);
+    margin-top:18px; border-radius:6px; overflow:hidden;
   }
   .progress-fill{
-    height:100%; background:var(--pink); width:0%;
-    border-radius:6px;
-    transition:width .3s linear;
+    height:100%; background:var(--accent); width:0%;
+    border-radius:6px; transition:width .4s linear;
   }
 
   #doneStage{
     display:none;
-    flex-direction:column; align-items:center; gap:16px;
+    flex-direction:column; align-items:center; gap:14px;
+  }
+  .done-title{
+    font-family:var(--font);
+    font-weight:900;
+    font-size:22px;
+    color:var(--ink);
+    text-align:center;
+    line-height:1.5;
   }
   .qr-wrap{
     background:var(--surface);
-    padding:14px;
-    border-radius:18px;
+    padding:16px;
+    border-radius:20px;
     box-shadow:0 14px 30px -10px #00000022;
+    border:2px solid var(--line);
   }
-  .qr-wrap canvas{ display:block; width:150px; height:150px; }
+  .qr-wrap canvas{ display:block; width:180px !important; height:180px !important; }
   .qr-label{
-    font-family:var(--font-zh);
+    font-family:var(--font);
     font-weight:700;
     font-size:14px;
     color:var(--muted);
+    text-align:center;
   }
-  #btnNextShot{ flex:none; width:220px; margin-top:6px; }
+  #btnNextShot{ flex:none; width:220px; margin-top:4px; }
 
   #captureCanvasFull{ display:none; }
 </style>
@@ -331,116 +391,120 @@
 <body>
 
 <div id="app">
+  <div id="screens">
 
-  <!-- ===================== 1. 歡迎光臨 ===================== -->
-  <div class="screen active" id="screen-welcome">
-    <div class="welcome-deco-top">
-      <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--yellow)"/><g fill="var(--pink)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
-      <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--pink)"/><g fill="var(--yellow)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
-      <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--yellow)"/><g fill="var(--pink)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
+    <!-- ===================== 1. 歡迎光臨 ===================== -->
+    <div class="screen active" id="screen-welcome">
+      <div class="welcome-deco-top">
+        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent2)"/><g fill="var(--accent)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
+        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent)"/><g fill="var(--accent2)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
+        <svg viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="6" fill="var(--accent2)"/><g fill="var(--accent)"><ellipse cx="20" cy="7" rx="5" ry="8"/><ellipse cx="20" cy="33" rx="5" ry="8"/><ellipse cx="7" cy="20" rx="8" ry="5"/><ellipse cx="33" cy="20" rx="8" ry="5"/></g></svg>
+      </div>
+      <div class="welcome-mid">
+        <div class="mascot-emoji">👧<span class="emoji-gap">🦁</span></div>
+        <div>
+          <div class="brand-title">小女孩和花花獅<br>拍貼機</div>
+          <div class="brand-sub">PHOTO BOOTH</div>
+        </div>
+      </div>
+      <div class="press-start">PRESS TO START</div>
     </div>
 
-    <div class="welcome-mid">
-      <div class="mascot-emoji">👧<span class="emoji-gap">🦁</span></div>
-
-      <div>
-        <div class="brand-title">小女孩和花花獅<br>拍貼機</div>
-        <div class="brand-sub">PHOTO BOOTH</div>
+    <!-- ===================== 2. 選擇相框 ===================== -->
+    <div class="screen" id="screen-frames">
+      <div class="nav-bar">
+        <button class="btn-back" id="btnFrameBack">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          返回
+        </button>
+      </div>
+      <div class="frames-header">選擇你的相框</div>
+      <div class="frames-scroll" id="framesScroll"></div>
+      <div class="frames-footer">
+        <button class="btn btn-fill" id="btnFrameConfirm" disabled>確認選擇</button>
       </div>
     </div>
 
-    <div class="press-start">PRESS TO START</div>
-  </div>
-
-  <!-- ===================== 2. 選擇相框 ===================== -->
-  <div class="screen" id="screen-frames">
-    <div class="frames-scroll" id="framesScroll"></div>
-    <div class="frames-footer">
-      <button class="btn btn-outline" id="btnFrameBack">返回</button>
-      <button class="btn btn-fill" id="btnFrameConfirm" disabled>確認</button>
-    </div>
-  </div>
-
-  <!-- ===================== 3. 拍照畫面 ===================== -->
-  <div class="screen" id="screen-camera">
-    <div></div>
-    <div class="ratio-box cam-box" id="camBox">
-      <video id="video" autoplay playsinline muted></video>
-      <canvas id="capturedCanvas"></canvas>
-      <img class="frame-overlay-img" id="cameraFrameOverlay" src="" style="display:none">
-      <div class="countdown-num" id="countdownNum"></div>
-      <div class="flash-overlay" id="flashOverlay"></div>
-    </div>
-    <div class="cam-buttons">
-      <button class="btn btn-outline" id="btnRetake" disabled>重新拍照</button>
-      <button class="btn btn-fill" id="btnConfirmShot">確認拍照</button>
-    </div>
-  </div>
-
-  <!-- ===================== 4. 列印中 / 完成 ===================== -->
-  <div class="screen" id="screen-printing">
-    <div class="ratio-box print-box" id="printBox">
-      <canvas id="resultCanvas"></canvas>
+    <!-- ===================== 3. 拍照畫面 ===================== -->
+    <div class="screen" id="screen-camera">
+      <div class="nav-bar">
+        <button class="btn-back" id="btnCameraBack">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          返回
+        </button>
+      </div>
+      <div class="cam-title">來個大大的微笑吧！😄</div>
+      <div class="ratio-box cam-box" id="camBox">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="capturedCanvas"></canvas>
+        <img class="frame-overlay-img" id="cameraFrameOverlay" src="" style="display:none">
+        <div class="countdown-num" id="countdownNum"></div>
+        <div class="flash-overlay" id="flashOverlay"></div>
+      </div>
+      <div class="cam-buttons">
+        <button class="btn btn-outline" id="btnRetake" disabled>重新拍照</button>
+        <button class="btn btn-fill" id="btnConfirmShot">確認拍照</button>
+      </div>
     </div>
 
-    <div id="printingStage">
-      <div class="printing-text">照片列印中　請稍候<span class="dot-flicker"><span></span><span></span><span></span></span></div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <!-- ===================== 4. 列印中 / 完成 ===================== -->
+    <div class="screen" id="screen-printing">
+      <div class="nav-bar">
+        <button class="btn-back" id="btnPrintBack">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          返回
+        </button>
+      </div>
+      <div class="printing-inner">
+        <div class="ratio-box print-box" id="printBox">
+          <canvas id="resultCanvas"></canvas>
+        </div>
+
+        <div id="printingStage">
+          <div class="printing-text">
+            <div>照片列印中　請稍候</div>
+            <div class="dot-flicker"><span></span><span></span><span></span></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div id="doneStage">
+          <div class="done-title">照片已準備好～<br>掃描儲存照片！</div>
+          <div class="qr-wrap" id="qrWrap"><canvas id="qrCanvas"></canvas></div>
+          <div class="qr-label" id="qrLabel"></div>
+          <button class="btn btn-fill" id="btnNextShot">拍下一張</button>
+        </div>
+      </div>
     </div>
 
-    <div id="doneStage">
-      <div class="qr-wrap" id="qrWrap"><canvas id="qrCanvas"></canvas></div>
-      <div class="qr-label" id="qrLabel">掃描 QR Code　下載照片</div>
-      <button class="btn btn-fill" id="btnNextShot">拍下一張</button>
-    </div>
-  </div>
+  </div><!-- /#screens -->
 
+  <div id="copyright-footer">© PLUDDIE STUDIO</div>
   <canvas id="captureCanvasFull"></canvas>
 </div>
 
 <script>
 /* =========================================================
-   設定區：相框資料
-   ---------------------------------------------------------
-   👉 之後請把 src 換成你自己的相框 PNG 路徑（例如 frames/01.png）
-   👉 相框 PNG 規格建議：直式比例 54:85（與實際照片尺寸一致），
-      建議輸出 1080 x 1700px，透明背景，中間挖空讓相機畫面透出來
+   設定區
 ========================================================= */
 const FRAME_DATA = [
-  { id:1, src:null },
-  { id:2, src:null },
-  { id:3, src:null },
-  { id:4, src:null },
-  { id:5, src:null },
-  { id:6, src:null },
-  { id:7, src:null },
-  { id:8, src:null },
+  { id:1, src:null },{ id:2, src:null },{ id:3, src:null },{ id:4, src:null },
+  { id:5, src:null },{ id:6, src:null },{ id:7, src:null },{ id:8, src:null },
 ];
 
-/* =========================================================
-   設定區：傳送設定（EmailJS）
-   ---------------------------------------------------------
-   👉 請依照「設定說明.md」填入你自己的 EmailJS 資訊
-========================================================= */
 const EMAILJS_CONFIG = {
-  enabled: false,            // 設定好後改成 true
+  enabled: false,
   publicKey: 'YOUR_PUBLIC_KEY',
   serviceId: 'YOUR_SERVICE_ID',
   templateId: 'YOUR_TEMPLATE_ID',
   toEmail: 'your-phone-mailbox@example.com'
 };
 
-/* =========================================================
-   設定區：QR Code 下載連結（imgbb 圖片上傳）
-   ---------------------------------------------------------
-   👉 請依照「設定說明.md」申請免費 imgbb API Key
-========================================================= */
 const IMGBB_CONFIG = {
-  enabled: false,           // 設定好 apiKey 後改成 true
+  enabled: false,
   apiKey: 'YOUR_IMGBB_API_KEY',
 };
 
-/* 輸出畫布解析度（維持 54:85 比例，數值越大畫質越高） */
 const OUT_W = 1080, OUT_H = 1700;
 
 /* ========================================================= */
@@ -448,15 +512,15 @@ const OUT_W = 1080, OUT_H = 1700;
 let state = {
   selectedFrame: null,
   stream: null,
-  capturedDataUrl: null,   // 暫存定格畫面（含鏡像修正、未含相框）
-  shotState: 'live',       // 'live' | 'captured'
+  capturedDataUrl: null,
+  shotState: 'live',
   counting: false,
 };
 
 const screens = {
-  welcome: document.getElementById('screen-welcome'),
-  frames: document.getElementById('screen-frames'),
-  camera: document.getElementById('screen-camera'),
+  welcome:  document.getElementById('screen-welcome'),
+  frames:   document.getElementById('screen-frames'),
+  camera:   document.getElementById('screen-camera'),
   printing: document.getElementById('screen-printing'),
 };
 
@@ -466,6 +530,13 @@ function goTo(name){
 }
 
 /* ---------- 1. 歡迎頁 ---------- */
+window.addEventListener('load', ()=>{
+  // 頁面載入即靜默請求相機，讓同意彈窗在首頁出現
+  navigator.mediaDevices.getUserMedia({ video:true, audio:false })
+    .then(s=>{ s.getTracks().forEach(t=>t.stop()); })
+    .catch(()=>{});
+});
+
 screens.welcome.addEventListener('click', ()=>{
   renderFrameList();
   goTo('frames');
@@ -477,20 +548,16 @@ function renderFrameList(){
   wrap.innerHTML = '';
   FRAME_DATA.forEach(frame=>{
     const slot = document.createElement('div');
-    slot.className = 'ratio-box frame-slot' + (frame.src ? ' has-image' : '');
+    slot.className = 'frame-slot' + (frame.src ? ' has-image' : '');
     slot.dataset.id = frame.id;
 
     const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
+    fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
     fileInput.addEventListener('change', (e)=>{
-      const file = e.target.files[0];
-      if(!file) return;
+      const file = e.target.files[0]; if(!file) return;
       const reader = new FileReader();
       reader.onload = (ev)=>{
         frame.src = ev.target.result;
-        // 上傳完直接選中這一格，方便立刻測試效果
         document.querySelectorAll('.frame-slot').forEach(c=>c.classList.remove('selected'));
         state.selectedFrame = frame;
         document.getElementById('btnFrameConfirm').disabled = false;
@@ -502,44 +569,38 @@ function renderFrameList(){
     });
     slot.appendChild(fileInput);
 
-    const content = document.createElement('div');
-    content.innerHTML = frame.src
-      ? `<img src="${frame.src}" alt="">`
-      : `<svg class="plus-icon" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
-    slot.appendChild(content.firstChild);
+    const inner = document.createElement('div');
+    inner.className = 'slot-inner';
+    if(frame.src){
+      const img = document.createElement('img'); img.src = frame.src; img.alt = '';
+      inner.appendChild(img);
+    } else {
+      inner.innerHTML = `<svg class="plus-icon" viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+    }
+    slot.appendChild(inner);
 
     if(frame.src){
-      const replaceBtn = document.createElement('div');
-      replaceBtn.className = 'replace-btn';
-      replaceBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5V19a1 1 0 001 1h2.5L18 9.5 14.5 6 4 16.5zM16 4l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      replaceBtn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        fileInput.click();
-      });
-      slot.appendChild(replaceBtn);
+      const rb = document.createElement('div');
+      rb.className = 'replace-btn';
+      rb.innerHTML = `<svg viewBox="0 0 24 24" fill="none"><path d="M4 16.5V19a1 1 0 001 1h2.5L18 9.5 14.5 6 4 16.5zM16 4l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      rb.addEventListener('click', (e)=>{ e.stopPropagation(); fileInput.click(); });
+      slot.appendChild(rb);
     }
 
     slot.insertAdjacentHTML('beforeend', `
       <div class="sel-badge">
         <svg viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-    `);
+      </div>`);
 
     slot.addEventListener('click', ()=>{
-      if(!frame.src){
-        fileInput.click();
-        return;
-      }
+      if(!frame.src){ fileInput.click(); return; }
       document.querySelectorAll('.frame-slot').forEach(c=>c.classList.remove('selected'));
       slot.classList.add('selected');
       state.selectedFrame = frame;
       document.getElementById('btnFrameConfirm').disabled = false;
     });
 
-    if(state.selectedFrame && state.selectedFrame.id === frame.id){
-      slot.classList.add('selected');
-    }
-
+    if(state.selectedFrame && state.selectedFrame.id === frame.id) slot.classList.add('selected');
     wrap.appendChild(slot);
   });
 }
@@ -555,20 +616,16 @@ document.getElementById('btnFrameConfirm').addEventListener('click', startCamera
 /* ---------- 3. 拍照畫面 ---------- */
 async function startCamera(){
   const overlay = document.getElementById('cameraFrameOverlay');
-  if(state.selectedFrame.src){
-    overlay.src = state.selectedFrame.src;
-    overlay.style.display = 'block';
+  if(state.selectedFrame && state.selectedFrame.src){
+    overlay.src = state.selectedFrame.src; overlay.style.display = 'block';
   } else {
     overlay.style.display = 'none';
   }
-
   resetCameraState();
   goTo('camera');
-
   try{
     state.stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:'user', width:{ideal:1080}, height:{ideal:1440} },
-      audio:false
+      video:{ facingMode:'user', width:{ideal:1080}, height:{ideal:1440} }, audio:false
     });
     document.getElementById('video').srcObject = state.stream;
   }catch(err){
@@ -578,14 +635,19 @@ async function startCamera(){
 }
 
 function resetCameraState(){
-  state.shotState = 'live';
-  state.capturedDataUrl = null;
-  state.counting = false;
+  state.shotState = 'live'; state.capturedDataUrl = null; state.counting = false;
   document.getElementById('video').classList.remove('hide');
   document.getElementById('capturedCanvas').classList.remove('show');
   document.getElementById('btnRetake').disabled = true;
   document.getElementById('btnConfirmShot').disabled = false;
 }
+
+// 拍照頁返回
+document.getElementById('btnCameraBack').addEventListener('click', ()=>{
+  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
+  resetCameraState();
+  goTo('frames');
+});
 
 document.getElementById('btnConfirmShot').addEventListener('click', ()=>{
   if(state.shotState === 'live'){
@@ -598,94 +660,82 @@ document.getElementById('btnConfirmShot').addEventListener('click', ()=>{
 
 document.getElementById('btnRetake').addEventListener('click', ()=>{
   if(state.shotState !== 'captured' || state.counting) return;
-  state.shotState = 'live';
-  state.capturedDataUrl = null;
+  state.shotState = 'live'; state.capturedDataUrl = null;
   document.getElementById('video').classList.remove('hide');
   document.getElementById('capturedCanvas').classList.remove('show');
   document.getElementById('btnRetake').disabled = true;
 });
 
-function setCamButtonsDisabled(disabled){
-  document.getElementById('btnConfirmShot').disabled = disabled;
-  document.getElementById('btnRetake').disabled = disabled || state.shotState !== 'captured';
+function setCamButtonsDisabled(d){
+  document.getElementById('btnConfirmShot').disabled = d;
+  document.getElementById('btnRetake').disabled = d || state.shotState !== 'captured';
 }
 
 function startCountdownThenShoot(){
-  state.counting = true;
-  setCamButtonsDisabled(true);
-
+  state.counting = true; setCamButtonsDisabled(true);
   const numEl = document.getElementById('countdownNum');
-  let n = 3;
-  showCountdownNumber(numEl, n);
-
+  let n = 3; showCountdownNumber(numEl, n);
   const interval = setInterval(()=>{
     n--;
-    if(n > 0){
-      showCountdownNumber(numEl, n);
-    } else {
+    if(n > 0){ showCountdownNumber(numEl, n); }
+    else{
       clearInterval(interval);
-      setTimeout(()=>{
-        takeSnapshot();
-        state.counting = false;
-        setCamButtonsDisabled(false);
-      }, 700);
+      setTimeout(()=>{ takeSnapshot(); state.counting = false; setCamButtonsDisabled(false); }, 700);
     }
   }, 1000);
 }
 
-function showCountdownNumber(numEl, n){
-  numEl.textContent = n;
-  numEl.classList.remove('show');
-  void numEl.offsetWidth;
-  numEl.classList.add('show');
+function showCountdownNumber(el, n){
+  el.textContent = n; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
 
 function takeSnapshot(){
   const video = document.getElementById('video');
   const canvas = document.getElementById('capturedCanvas');
   const flash = document.getElementById('flashOverlay');
-
-  flash.classList.remove('fire');
-  void flash.offsetWidth;
-  flash.classList.add('fire');
-
-  const boxRect = document.getElementById('camBox').getBoundingClientRect();
+  flash.classList.remove('fire'); void flash.offsetWidth; flash.classList.add('fire');
   canvas.width = OUT_W; canvas.height = OUT_H;
   const ctx = canvas.getContext('2d');
-
   drawVideoCover(ctx, video, OUT_W, OUT_H, true);
-
   state.capturedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
   state.shotState = 'captured';
-
-  video.classList.add('hide');
-  canvas.classList.add('show');
+  video.classList.add('hide'); canvas.classList.add('show');
   document.getElementById('btnRetake').disabled = false;
 }
 
-/* 將 video 以 cover 方式（含鏡像）畫入指定大小的 canvas */
 function drawVideoCover(ctx, video, W, H, mirror){
-  const vw = video.videoWidth, vh = video.videoHeight;
-  const vr = vw/vh, tr = W/H;
+  const vw=video.videoWidth, vh=video.videoHeight, vr=vw/vh, tr=W/H;
   let sx,sy,sw,sh;
-  if(vr > tr){ sh = vh; sw = sh*tr; sx=(vw-sw)/2; sy=0; }
-  else{ sw = vw; sh = sw/tr; sx=0; sy=(vh-sh)/2; }
-
+  if(vr>tr){ sh=vh; sw=sh*tr; sx=(vw-sw)/2; sy=0; }
+  else{ sw=vw; sh=sw/tr; sx=0; sy=(vh-sh)/2; }
   ctx.save();
   if(mirror){ ctx.translate(W,0); ctx.scale(-1,1); }
-  ctx.drawImage(video, sx,sy,sw,sh, 0,0,W,H);
+  ctx.drawImage(video,sx,sy,sw,sh,0,0,W,H);
   ctx.restore();
 }
 
 function finishCamera(){
-  if(state.stream){
-    state.stream.getTracks().forEach(t=>t.stop());
-  }
+  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
   goTo('printing');
   composeAndPrint();
 }
 
-/* ---------- 4. 合成 + 列印中 + 自動傳送 + QR 下載 ---------- */
+/* ---------- 4. 列印中 ---------- */
+// 列印頁返回→回到拍照（重新開鏡頭）
+document.getElementById('btnPrintBack').addEventListener('click', ()=>{
+  // 只有在 printingStage 顯示中（還在跑 bar）時才有意義返回到拍照重拍
+  // 若已完成則回到相框選擇
+  const printing = document.getElementById('printingStage');
+  if(printing.style.display !== 'none'){
+    goTo('camera');
+    startCamera(); // 重新開鏡頭
+  } else {
+    state.selectedFrame = null;
+    document.getElementById('btnFrameConfirm').disabled = true;
+    goTo('welcome');
+  }
+});
+
 async function composeAndPrint(){
   document.getElementById('printingStage').style.display = '';
   document.getElementById('doneStage').style.display = 'none';
@@ -695,31 +745,23 @@ async function composeAndPrint(){
   const ctx = canvas.getContext('2d');
   canvas.width = OUT_W; canvas.height = OUT_H;
 
-  // 畫入剛剛拍下的定格照片
   await new Promise(resolve=>{
     const img = new Image();
-    img.onload = ()=>{ ctx.drawImage(img, 0,0,OUT_W,OUT_H); resolve(); };
+    img.onload = ()=>{ ctx.drawImage(img,0,0,OUT_W,OUT_H); resolve(); };
     img.src = state.capturedDataUrl;
   });
 
-  // 疊上相框
   if(state.selectedFrame && state.selectedFrame.src){
     await new Promise(resolve=>{
-      const frameImg = new Image();
-      frameImg.onload = ()=>{ ctx.drawImage(frameImg, 0,0,OUT_W,OUT_H); resolve(); };
-      frameImg.onerror = resolve;
-      frameImg.src = state.selectedFrame.src;
+      const fi = new Image();
+      fi.onload = ()=>{ ctx.drawImage(fi,0,0,OUT_W,OUT_H); resolve(); };
+      fi.onerror = resolve; fi.src = state.selectedFrame.src;
     });
   }
 
-  await animateProgress(1500);
-
   const finalDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-
-  // 畫面文字維持「照片列印中 請稍候」直到這裡，背景靜默寄出 email
   sendEmailInBackground(finalDataUrl);
-
-  // 接著切換到完成畫面，嘗試產生 QR Code 供掃描下載
+  await animateProgress(30000);
   await showDownloadStage(finalDataUrl);
 }
 
@@ -728,10 +770,9 @@ function animateProgress(duration){
     const fill = document.getElementById('progressFill');
     const start = performance.now();
     function tick(now){
-      const p = Math.min(1, (now-start)/duration);
-      fill.style.width = (p*100) + '%';
-      if(p < 1) requestAnimationFrame(tick);
-      else resolve();
+      const p = Math.min(1,(now-start)/duration);
+      fill.style.width = (p*100)+'%';
+      if(p<1) requestAnimationFrame(tick); else resolve();
     }
     requestAnimationFrame(tick);
   });
@@ -741,59 +782,54 @@ async function sendEmailInBackground(finalDataUrl){
   try{
     if(EMAILJS_CONFIG.enabled && window.emailjs){
       await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-        to_email: EMAILJS_CONFIG.toEmail,
-        image_data: finalDataUrl,
+        to_email: EMAILJS_CONFIG.toEmail, image_data: finalDataUrl,
         time: new Date().toLocaleString()
       }, EMAILJS_CONFIG.publicKey);
-    } else {
-      console.warn('[拍貼機] EmailJS 尚未設定，目前不會真的寄出。請參考「設定說明.md」設定 EMAILJS_CONFIG。');
     }
-  }catch(err){
-    console.error('Email 傳送失敗', err);
-  }
+  }catch(err){ console.error('Email 傳送失敗', err); }
 }
 
 async function uploadToImgbb(dataUrl){
   const base64 = dataUrl.split(',')[1];
-  const form = new FormData();
-  form.append('image', base64);
-  const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_CONFIG.apiKey}`, {
-    method:'POST',
-    body: form
-  });
+  const form = new FormData(); form.append('image', base64);
+  const resp = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_CONFIG.apiKey}`,{ method:'POST', body:form });
   const json = await resp.json();
-  if(json && json.success){
-    return json.data.url || json.data.display_url;
-  }
-  throw new Error('imgbb upload failed: ' + JSON.stringify(json));
+  if(json && json.success) return json.data.url || json.data.display_url;
+  throw new Error('imgbb upload failed');
 }
 
 async function showDownloadStage(finalDataUrl){
   document.getElementById('printingStage').style.display = 'none';
-  const doneStage = document.getElementById('doneStage');
-  doneStage.style.display = 'flex';
+  document.getElementById('doneStage').style.display = 'flex';
 
   const qrWrap = document.getElementById('qrWrap');
   const qrLabel = document.getElementById('qrLabel');
+  const qrCanvas = document.getElementById('qrCanvas');
 
   if(IMGBB_CONFIG.enabled && window.QRCode){
     qrLabel.textContent = '正在產生下載連結…';
     try{
       const url = await uploadToImgbb(finalDataUrl);
-      QRCode.toCanvas(document.getElementById('qrCanvas'), url, {
-        width:150, margin:1,
-        color:{ dark:'#4A3B33', light:'#FFFFFF' }
-      });
+      qrCanvas.width = qrCanvas.height = 0;
+      QRCode.toCanvas(qrCanvas, url, { width:180, margin:1, color:{ dark:'#3E2A1A', light:'#FFFFFF' } });
       qrWrap.style.display = '';
-      qrLabel.textContent = '掃描 QR Code　下載照片';
+      qrLabel.textContent = '用手機掃描下載你的照片';
     }catch(err){
-      console.error('上傳失敗，無法產生 QR Code', err);
+      console.error('上傳失敗', err);
       qrWrap.style.display = 'none';
-      qrLabel.textContent = '無法產生下載連結，請改用 Email 接收照片';
+      qrLabel.textContent = '無法產生 QR Code，請改用 Email 接收';
     }
   } else {
-    qrWrap.style.display = 'none';
-    qrLabel.textContent = '照片已寄出，請從信箱下載照片';
+    if(window.QRCode){
+      try{
+        qrCanvas.width = qrCanvas.height = 0;
+        QRCode.toCanvas(qrCanvas, 'https://pluddie.studio', { width:180, margin:1, color:{ dark:'#3E2A1A', light:'#FFFFFF' } });
+        qrWrap.style.display = '';
+        qrLabel.textContent = '設定 imgbb 後即可掃碼下載照片';
+      }catch(e){ qrWrap.style.display = 'none'; }
+    } else {
+      qrWrap.style.display = 'none';
+    }
   }
 }
 
@@ -804,9 +840,7 @@ document.getElementById('btnNextShot').addEventListener('click', ()=>{
 });
 </script>
 
-<!-- EmailJS SDK：設定好 EMAILJS_CONFIG 並改 enabled:true 後即可啟用 -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-<!-- QRCode 產生器：用於列印頁顯示可掃描下載的 QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 
 </body>
