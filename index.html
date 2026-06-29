@@ -209,8 +209,8 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    height:64px;
-    padding:0 16px;
+    height:68px;
+    padding:0 80px;
   }
   .btn-back{
     position:absolute; left:12px; top:50%; transform:translateY(-50%);
@@ -233,7 +233,7 @@
   .page-title{
     font-family:var(--font);
     font-weight:900;
-    font-size:30px;
+    font-size:36px;
     color:var(--ink);
     letter-spacing:.04em;
     text-align:center;
@@ -298,18 +298,7 @@
   .frame-slot img{ width:100%; height:100%; object-fit:cover; display:block; }
   .slot-inner{ display:flex; align-items:center; justify-content:center; }
   .plus-icon{ width:30px; height:30px; color:var(--muted); }
-  .sel-badge{
-    position:absolute; top:8px; left:8px; bottom:auto; right:auto;
-    width:26px; height:26px; border-radius:50%;
-    background:var(--accent);
-    display:flex; align-items:center; justify-content:center;
-    opacity:0; transform:scale(.6);
-    transition:opacity .2s, transform .2s;
-    z-index:3;
-    box-shadow:0 2px 8px #00000040;
-  }
-  .frame-slot.selected .sel-badge{ opacity:1; transform:scale(1); }
-  .sel-badge svg{ width:14px; height:14px; }
+
   .replace-btn{
     position:absolute; top:8px; left:8px;
     width:28px; height:28px; border-radius:50%;
@@ -426,12 +415,7 @@
     width:100%; height:100%; object-fit:cover;
   }
   #video{ transform:scaleX(-1); }
-  .frame-overlay-img{
-    position:absolute; inset:0;
-    width:100%; height:100%; object-fit:cover;
-    pointer-events:none;
-  }
-  #capturedCanvas{ display:none; }
+#capturedCanvas{ display:none; }
   #capturedCanvas.show{ display:block; }
   #video.hide{ display:none; }
   .flash-overlay{
@@ -746,7 +730,7 @@
   <div class="popup-backdrop" id="donePopup">
     <div class="popup-card">
       <div class="popup-icon">🎉</div>
-      <div class="popup-title">照片準備好啦！</div>
+      <div class="popup-title">照片準備好囉！</div>
       <div class="popup-qr-wrap" id="popupQrWrap">
         <img id="popupQrImg" alt="QR Code" src="">
       </div>
@@ -787,17 +771,15 @@ const IMGBB_CONFIG = {
 };
 
 const OUT_W = 1181, OUT_H = 1748; // 100×148mm 明信片尺寸（4×6），300dpi
-const GRID_GAP = 16; // 拼貼格子之間的間距(px，以輸出畫布尺寸為基準)
 function getShotsRequired(){ return state.layout === '2x3' ? 3 : 4; }
 
 /* ========================================================= */
 
 let state = {
   selectedFrame: null,
-  layout: null,        // '2x2' 或 '2x4'
+  layout: null,        // '2x2' 或 '2x3'
   stream: null,
-  shots: [],            // 已確認的拍攝結果(dataURL陣列)
-  capturedDataUrl: null,
+  shots: [],
   shotState: 'live',
   counting: false,
 };
@@ -890,10 +872,7 @@ function renderFrameList(){
       slot.appendChild(rb);
     }
 
-    slot.insertAdjacentHTML('beforeend', `
-      <div class="sel-badge">
-        <svg viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>`);
+
 
     slot.addEventListener('click', ()=>{
       if(!frame.src){ fileInput.click(); return; }
@@ -945,7 +924,6 @@ document.getElementById('btnLayoutConfirm').addEventListener('click', ()=>{
 
 /* ---------- 4. 拍照畫面 ---------- */
 async function startCamera(){
-  // 依照版型設定鏡頭框比例
   const camBox = document.querySelector('.cam-box');
   if(state.layout === '2x2'){
     camBox.classList.add('mode-2x2');
@@ -953,7 +931,6 @@ async function startCamera(){
     camBox.classList.remove('mode-2x2');
   }
 
-  // 依照版型產生進度點
   const SHOTS = getShotsRequired();
   const progressEl = document.getElementById('shotProgress');
   progressEl.innerHTML = Array.from({length:SHOTS}, ()=>'<span class="shot-dot"></span>').join('');
@@ -962,6 +939,13 @@ async function startCamera(){
   updateShotProgress();
   resetCameraState();
   goTo('camera');
+
+  // 若已有活躍的 stream，直接重用，不重複授權
+  if(state.stream && state.stream.active){
+    document.getElementById('video').srcObject = state.stream;
+    return;
+  }
+
   const stream = await requestCameraPermission();
   if(stream){
     document.getElementById('video').srcObject = stream;
@@ -996,7 +980,6 @@ function resetCameraState(){
 }
 
 document.getElementById('btnCameraBack').addEventListener('click', ()=>{
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
   state.shots = [];
   resetCameraState();
   goTo('frames');
@@ -1085,9 +1068,7 @@ function drawImageCover(ctx, img, x, y, w, h){
 }
 
 async function goToPreview(){
-  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
   goTo('preview');
-  // 合成預覽（含相框）
   const canvas = document.getElementById('previewCanvas');
   const ctx = canvas.getContext('2d');
   canvas.width = OUT_W; canvas.height = OUT_H;
@@ -1102,29 +1083,24 @@ async function goToPreview(){
   }
 }
 
-function finishCamera(){
-  goToPreview();
-}
-
 document.getElementById('btnPreviewBack').addEventListener('click', ()=>{
-  startCamera();
+  resetCameraState();
+  goTo('camera');
+  // 重用已有的 stream，不重新授權
+  if(state.stream && state.stream.active){
+    document.getElementById('video').srcObject = state.stream;
+  }
 });
 
 document.getElementById('btnConfirmPrint').addEventListener('click', ()=>{
+  if(state.stream) state.stream.getTracks().forEach(t=>t.stop());
   goTo('printing');
   composeAndPrint();
 });
 
 /* ---------- 4. 列印中 ---------- */
 document.getElementById('btnPrintBack').addEventListener('click', ()=>{
-  const popup = document.getElementById('donePopup');
-  if(popup.classList.contains('open')){
-    popup.classList.remove('open');
-    document.getElementById('printingStageInfo').style.display = '';
-    resetToWelcome();
-  } else {
-    goTo('preview');
-  }
+  goTo('preview');
 });
 
 function loadImage(src){
@@ -1136,36 +1112,33 @@ function loadImage(src){
   });
 }
 
-// 2×3：3張照片，左右各印一份（共6格），框為552×470px，置上，下方有空間做裝飾
+// 2×3：3張照片左右各一份（6格），照片格精確 552×470px
+// outerPad=28.5px（左右留邊），innerGap=20px（兩欄之間），rowGap=20px（行間距）
+// 置上，下方留空間給相框裝飾
 function draw2x3Layout(ctx, images){
-  const FRAME_W = 552, FRAME_H = 470;
-  const scale = OUT_W / (FRAME_W * 2 + GRID_GAP * 3);
-  const cellW = Math.round(FRAME_W * scale);
-  const cellH = Math.round(FRAME_H * scale);
-  const gap = Math.round(GRID_GAP * scale);
+  const CELL_W = 552, CELL_H = 470;
+  const OUTER = 28.5, INNER_GAP = 20, ROW_GAP = 20, TOP = 28;
   for(let col = 0; col < 2; col++){
-    const x = gap + col * (cellW + gap);
+    const x = Math.round(OUTER + col * (CELL_W + INNER_GAP));
     for(let row = 0; row < 3; row++){
-      const y = gap + row * (cellH + gap);
-      drawImageCover(ctx, images[row], x, y, cellW, cellH);
+      const y = TOP + row * (CELL_H + ROW_GAP);
+      drawImageCover(ctx, images[row], x, y, CELL_W, CELL_H);
     }
   }
 }
 
-// 2×2：4張照片各佔一格，框為552×600px，左二右二，置中，上下有空間
+// 2×2：4張照片各佔一格，照片格精確 552×600px
+// outerPad=28.5px（左右留邊），innerGap=20px（兩欄/行之間），垂直置中
 function draw2x2Layout(ctx, images){
-  const FRAME_W = 552, FRAME_H = 600;
-  const scale = OUT_W / (FRAME_W * 2 + GRID_GAP * 3);
-  const cellW = Math.round(FRAME_W * scale);
-  const cellH = Math.round(FRAME_H * scale);
-  const gap = Math.round(GRID_GAP * scale);
-  const totalGridH = cellH * 2 + gap * 3;
+  const CELL_W = 552, CELL_H = 600;
+  const OUTER = 28.5, INNER_GAP = 20;
+  const totalGridH = CELL_H * 2 + INNER_GAP;
   const startY = Math.round((OUT_H - totalGridH) / 2);
   images.forEach((img, i)=>{
-    const col = i % 2, row = Math.floor(i/2);
-    const x = gap + col*(cellW+gap);
-    const y = startY + gap + row*(cellH+gap);
-    drawImageCover(ctx, img, x, y, cellW, cellH);
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = Math.round(OUTER + col * (CELL_W + INNER_GAP));
+    const y = startY + row * (CELL_H + INNER_GAP);
+    drawImageCover(ctx, img, x, y, CELL_W, CELL_H);
   });
 }
 
