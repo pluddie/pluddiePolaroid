@@ -34,6 +34,7 @@
     --line:#4A372C;
     --font:'Nunito','Zen Maru Gothic',sans-serif;
     --edge-pad:36px; /* 全站統一的上下安全間距，header 頂部與 footer 底部都用這個值 */
+    --header-top-pad:56px; /* 標題列上方間距（比 edge-pad 更大，讓標題整體往下移） */
     --photo-ratio:100/148; /* 相紙比例：4×6明信片 100×148mm，直式 */
   }
 
@@ -195,7 +196,7 @@
      確保「絕對定位置中」的返回鈕跟「flex置中」的標題用同一個基準點，才會真正對齊） */
   .page-header{
     flex-shrink:0;
-    padding-top:max(var(--edge-pad), env(safe-area-inset-top));
+    padding-top:max(var(--header-top-pad), env(safe-area-inset-top));
     background:var(--bg);
   }
   .page-header-row{
@@ -730,7 +731,6 @@
   </div><!-- /#app-shell -->
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
 /* =========================================================
    設定區
@@ -745,7 +745,7 @@ const FRAME_DATA_2x2 = [
 function getFramePool(){ return state.layout === '2x3' ? FRAME_DATA_2x3 : FRAME_DATA_2x2; }
 
 const EMAILJS_CONFIG = {
-  enabled: true,
+  enabled: false, // 已改用 Google Drive，email 停用
   publicKey: 'tOXPtKhdfr5mQNlps',
   serviceId: 'service_t7d5jeu',
   templateId: 'template_ivd4njg',
@@ -755,6 +755,11 @@ const EMAILJS_CONFIG = {
 const IMGBB_CONFIG = {
   enabled: true,
   apiKey: '51ef997908f65842badc1eddf498bbe8',
+};
+
+const GDRIVE_CONFIG = {
+  enabled: true,
+  gasUrl: 'https://script.google.com/macros/s/AKfycbw5H3KMChU762Imf_5nCYI9W75jsIlrg3u4bhwBlf-LTRq0HBYgFuKHJ567Uff4InAgKg/exec',
 };
 
 const OUT_W = 1181, OUT_H = 1748; // 100×148mm 明信片尺寸（4×6），300dpi
@@ -1146,12 +1151,12 @@ async function composeAndPrint(){
   if(!state.printing) return;
 
   const finalDataUrl = canvas.toDataURL('image/jpeg', 0.92);
-  sendEmailInBackground(finalDataUrl);
 
-  // 上傳與進度條同時開始，兩者都完成後才開 popup
+  // imgbb（QR code用）與 Google Drive（手機下載列印用）同時上傳，互不阻塞
   const [, uploadUrl] = await Promise.all([
     animateProgress(30000),
     IMGBB_CONFIG.enabled ? uploadToImgbb(finalDataUrl).catch(()=>null) : Promise.resolve(null),
+    GDRIVE_CONFIG.enabled ? uploadToGoogleDrive(finalDataUrl).catch(e=>console.error('Drive上傳失敗', e)) : Promise.resolve(),
   ]);
   if(!state.printing) return;
 
@@ -1171,17 +1176,6 @@ function animateProgress(duration){
   });
 }
 
-async function sendEmailInBackground(finalDataUrl){
-  try{
-    if(EMAILJS_CONFIG.enabled && window.emailjs){
-      await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateId, {
-        to_email: EMAILJS_CONFIG.toEmail, image_data: finalDataUrl,
-        time: new Date().toLocaleString()
-      }, EMAILJS_CONFIG.publicKey);
-    }
-  }catch(err){ console.error('Email 傳送失敗', err); }
-}
-
 async function uploadToImgbb(dataUrl){
   const base64 = dataUrl.split(',')[1];
   const form = new FormData(); form.append('image', base64);
@@ -1189,6 +1183,17 @@ async function uploadToImgbb(dataUrl){
   const json = await resp.json();
   if(json && json.success) return json.data.url || json.data.display_url;
   throw new Error('imgbb upload failed');
+}
+
+async function uploadToGoogleDrive(dataUrl){
+  const timestamp = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  const filename = `photo_${timestamp}.jpg`;
+  const resp = await fetch(GDRIVE_CONFIG.gasUrl, {
+    method: 'POST',
+    body: JSON.stringify({ image: dataUrl, filename }),
+  });
+  const json = await resp.json();
+  if(!json.success) throw new Error(json.error || 'Google Drive 上傳失敗');
 }
 
 async function showDownloadStage(uploadUrl){
